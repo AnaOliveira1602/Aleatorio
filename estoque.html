@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro e Listagem de Produtos no Estoque</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Cadastro e Listagem de Produtos no Estoque</h1>
+
+    <!-- Formulário para cadastrar produto no estoque -->
+    <form id="cadastroEstoqueForm">
+        <label for="nomeProduto">Nome do Produto:</label>
+        <input type="text" id="nomeProduto" required>
+
+        <label for="quantidade">Quantidade:</label>
+        <input type="number" id="quantidade" required>
+
+        <label for="preco">Preço:</label>
+        <input type="number" step="0.01" id="preco" required>
+
+        <button type="button" onclick="cadastrarProduto()">Cadastrar Produto</button>
+    </form>
+
+    <!-- Lista de produtos no estoque -->
+    <h2>Lista de Produtos no Estoque</h2>
+    <ul id="listaProdutos"></ul>
+
+    <script>
+        var url = 'http://localhost:5000/';
+
+function cadastrarProduto() {
+    // Validações
+    if (!validaNome('nomeProduto')) {
+        return;
+    }
+
+    if (!validaQuantidade('quantidade')) {
+        return;
+    }
+
+    if (!validaPreco('preco')) {
+        return;
+    }
+
+    // Construção do JSON que vai no body da criação do produto
+    let body = {
+        'NomeProduto': document.getElementById('nomeProduto').value,
+        'Quantidade': parseInt(document.getElementById('quantidade').value),
+        'Preco': parseFloat(document.getElementById('preco').value)
+    };
+
+    // Envio da requisição usando a FETCH API
+    fetch(url + "estoques", {
+        'method': 'POST',
+        'headers': {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        'body': JSON.stringify(body)
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.text();
+        } else {
+            return response.text().then(text => {
+                throw new Error(text);
+            });
+        }
+    })
+    .then(output => {
+        console.log(output);
+        alert('Produto cadastrado com sucesso! :D');
+        // Limpar o formulário após o cadastro
+        document.getElementById('cadastroEstoqueForm').reset();
+    })
+    .catch(error => {
+        console.error(error);
+        alert('Não foi possível efetuar o cadastro do produto! :(');
+    });
+}
+
+// Funções de validação podem ser adaptadas conforme necessário
+function validaNome(id) {
+    let inputNome = document.getElementById(id);
+    if (inputNome.value.trim().length > 0) {
+        inputNome.classList.remove('erro-input');
+        return true;
+    } else {
+        inputNome.classList.add('erro-input');
+        return false;
+    }
+}
+
+function validaQuantidade(id) {
+    let inputQuantidade = document.getElementById(id);
+    if (parseInt(inputQuantidade.value) > 0) {
+        inputQuantidade.classList.remove('erro-input');
+        return true;
+    } else {
+        inputQuantidade.classList.add('erro-input');
+        return false;
+    }
+}
+
+function validaPreco(id) {
+    let inputPreco = document.getElementById(id);
+    if (parseFloat(inputPreco.value) > 0) {
+        inputPreco.classList.remove('erro-input');
+        return true;
+    } else {
+        inputPreco.classList.add('erro-input');
+        return false;
+    }
+}
+
+        function listarProdutos() {
+            // Limpa a lista de produtos
+            var listaProdutosElement = document.getElementById('listaProdutos');
+            listaProdutosElement.innerHTML = '';
+
+            // Faz a requisição para obter a lista de produtos
+            fetch(url + 'estoques')
+                .then(response => response.json())
+                .then(produtos => {
+                    // Preenche a lista com os produtos recebidos
+                    produtos.forEach(produto => {
+                        let li = document.createElement('li');
+                        li.textContent = `Nome: ${produto.nomeProduto}, Quantidade: ${produto.quantidade}, Preço: ${produto.preco.toFixed(2)}`;
+                        document.getElementById('listaProdutos').appendChild(li);
+                    });
+                })
+                .catch(error => console.error(error));
+        }
+        
+        // Inicialmente, ao carregar a página, lista os produtos
+        listarProdutos();
+    </script>
+</body>
+</html>
